@@ -553,8 +553,27 @@ for rollout in range(total_rollouts):
                 group_acc_rewards = accuracy_reward_fn(group_text, eval_fn)
                 group_fmt_rewards = format_reward_fn(group_text, variant=current_variant)
                 group_rewards = torch.stack([group_acc_rewards, group_fmt_rewards]).sum(dim=0)
+                # === GRPO Advantage Normalization 改良 ===
                 r_std, r_mean = torch.std_mean(group_rewards)
-                group_advantages = (group_rewards - r_mean) / (r_std + 1e-4)
+                # 可調參數
+                min_std = 1e-2  # epsilon，防止分母為 0
+                max_clip = 5.0  # advantage 最大裁剪
+                use_std = True  # 若 False，則不除以 std
+                smoothing = 0.0 # 若 >0，則用平滑 std: r_std = smoothing * last_std + (1-smoothing) * r_std
+                # 可選 smoothing
+                if not hasattr(globals(), '_last_r_std'):
+                    globals()['_last_r_std'] = r_std
+                if smoothing > 0:
+                    r_std = smoothing * globals()['_last_r_std'] + (1-smoothing) * r_std
+                    globals()['_last_r_std'] = r_std
+                # 可選不除以 std
+                if use_std:
+                    norm = r_std.clamp(min=min_std)
+                    group_advantages = (group_rewards - r_mean) / norm
+                else:
+                    group_advantages = group_rewards - r_mean
+                # 可選裁剪
+                group_advantages = torch.clamp(group_advantages, -max_clip, max_clip)
 
                 episodes.extend([
                     Episode(
