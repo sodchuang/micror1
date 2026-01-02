@@ -11,7 +11,6 @@
 ![simple Result](Simpleresult.png)
 圖二:simple prompt 不同episolon的結果
 
-### 1. Simple 提示詞組 (含思維鏈 CoT)
 * **指令**: `"Think step-by-step, then provide your final answer..."`
 * **特性**: 高度一致性，訓練曲線穩定。
 
@@ -32,11 +31,6 @@
 | `output_baseline.txt`| 0.844 | 16.6% | 0.678 | 起步極慢，準確率低 |
 
 ---
-
-## 🚀 第二階段：Advantage 優化與 Epsilon 消融實驗
-
-在確定 Simple Prompt 具有最佳潛力後，我們進一步對 RL 核心算法進行了調整。
-
 ### 1. 算法改進：動態 Policy 範圍控制
 為了提升訓練靈敏度，我們進行了以下更動：
 * **移除限制**: 拿掉 Advantage 計算中原本的 `max` 限制。
